@@ -16,6 +16,7 @@ import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -46,8 +47,9 @@ public class Connector {
 
 			return checkForErrorsAndReturnResponse(con);
 		} catch (IOException e) {
+			System.out.println("Exception in doRequest " + e);
 			throw new RuntimeException();
-
+			
 		} finally {
 			if (con != null) {
 				con.disconnect();
@@ -64,16 +66,19 @@ public class Connector {
 		try {
 			url = new URL(httpsURL);
 		} catch (MalformedURLException e) {
+			System.out.println("Exception in setupCOnnection " + e);
 			throw new RuntimeException();
 		}
 		try {
 			con = (HttpsURLConnection) url.openConnection();
 		} catch (IOException e) {
+			System.out.println("Exception in setupCOnnection " + e);
 			throw new RuntimeException();
 		}
 		try {
 			con.setRequestMethod(requestMethod);
 		} catch (ProtocolException e) {
+			System.out.println("Exception in setupCOnnection " + e);
 			throw new RuntimeException();
 		}
 		
@@ -86,7 +91,7 @@ public class Connector {
 				"MC Open API OAuth Framework v1.0-Java");
 		System.out.println("Connection set");
 		if (body != null) {
-			con.addRequestProperty(CONTENT_TYPE, APPLICATION_XML);
+			con.addRequestProperty(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 			con.addRequestProperty(CONTENT_LENGTH,
 					Integer.toString(body.length()));
 		}
@@ -98,6 +103,7 @@ public class Connector {
 			HttpsURLConnection connection) {
 		try {
 			System.out.println("Entry into checkForErrorsAndReturnResponse");
+			System.out.println("Rsponse code :" + connection.getResponseCode());
 			if (connection.getResponseCode() >= SC_MULTIPLE_CHOICES) {
 				String message = readResponse(connection.getErrorStream());
 				// Cut the html off of the error message and leave the body
@@ -106,6 +112,7 @@ public class Connector {
 							message.indexOf(BODY_OPENING_TAG) + 6,
 							message.indexOf(BODY_CLOSING_TAG));
 				}
+				
 				throw new RuntimeException();
 			} else {
 				Map<String, String> responseMap = new HashMap<String, String>();
@@ -117,6 +124,7 @@ public class Connector {
 				return responseMap;
 			}
 		} catch (IOException e) {
+			System.out.println("Exception in checkForErrorsAndReturnResponse " + e);
 			throw new RuntimeException();
 		}
 	}
@@ -131,6 +139,7 @@ public class Connector {
 				builder.append(inputLine);
 			}
 		} catch (IOException e) {
+			System.out.println("Exception in readRersponse " + e);
 			throw new RuntimeException();
 		}
 		return builder.toString();
@@ -145,6 +154,7 @@ public class Connector {
 			request.append(body);
 			request.flush();
 		} catch (IOException e) {
+			System.out.println("Exception in writeBodyToConnection " + e);
 			throw new IOException(e);
 		} finally {
 			if (request != null) {
